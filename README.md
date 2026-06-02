@@ -1,112 +1,68 @@
-# Spectroscopic Ellipsometry Analysis of Thin Films (TiO₂ Dataset)
+# TiO₂ Dielectric Metalens Unit Cell Optimization
 
-This repository contains a full workflow for processing and analyzing spectroscopic ellipsometry (SE) data of TiO₂ thin films with different thicknesses (~101 nm, ~177 nm, ~305 nm). The pipeline extracts optical constants, builds dielectric functions, and analyzes thickness-dependent optical behavior.
-
----
-
-# Dataset Description
-
-The dataset is obtained from Variable Angle Spectroscopic Ellipsometry (VASE) measurements.
-
-Each sample includes:
-
-- Ψ (Psi): amplitude ratio of p- and s-polarized reflected light  
-- Δ (Delta): phase difference  
-- Model-fitted optical constants (n, k)
-
-### Film thicknesses:
-
-| Sample | Thickness |
-|--------|----------|
-| Film 1 | ~101 nm |
-| Film 2 | ~177 nm |
-| Film 3 | ~305 nm |
+This project contains a simulation of a dielectric metasurface unit cell that works at visible light wavelength (λ = 532 nm). It is done using Ansys Lumerical FDTD.
 
 ---
 
-# Theory Background
+## Design Specifications
 
-Ellipsometry measures the complex reflection ratio:
+The structure is a Titanium Dioxide (TiO₂) nanopillar placed on a glass substrate. It works like a small waveguide that controls the phase of light by changing the pillar radius.
 
-\[
-\rho = \tan(\Psi)e^{i\Delta} = \frac{r_p}{r_s}
-\]
-
-From this, the complex refractive index is extracted:
-
-\[
-\tilde{n} = n + ik
-\]
-
-The dielectric function is:
-
-\[
-\tilde{\varepsilon} = \varepsilon_1 + i\varepsilon_2 = (n + ik)^2
-\]
-
-Where:
-
-- $\varepsilon_1 = n^2 - k^2$ (dispersion)
-- $\varepsilon_2 = 2nk$ (optical absorption)
+| Parameter | Value | Reason |
+| --- | --- | --- |
+| **Wavelength (λ)** | 532 nm | Green laser light |
+| **Lattice Period (P)** | 350 nm | Smaller than wavelength to avoid unwanted diffraction |
+| **Pillar Height (H)** | 600 nm | Needed to get full phase shift (0 to 2π) |
+| **Pillar Radius (R)** | 50 nm to 150 nm | Changed during simulation |
+| **Substrate Index (n)** | 1.46 | Glass |
+| **Pillar Index (n)** | 2.45 | High index material |
 
 ---
 
-# Workflow
+## Simulation Setup
 
-## 1. Data Preprocessing
+The simulation is done using a Lumerical script (`.lsf`).
 
-- Clean multi-sheet Excel SE dataset
-- Remove empty columns
-- Extract wavelength-dependent n and k
-
-## 2. Optical Constants
-
-Construct dataset:
-
-- wavelength (nm)
-- n (refractive index)
-- k (extinction coefficient)
+- **Boundary conditions:** Periodic in X and Y, PML in Z
+- **Source:** Plane wave coming from the substrate
+- **Monitors:** One monitor above the pillar to measure transmission and phase
 
 ---
 
-## 3. Dielectric Function Conversion
+## Key Results
 
-```python
-eps1 = n**2 - k**2
-eps2 = 2 * n * k
+### 1. Phase and Transmission
 
-# Dataset Citation
+- **Good range (50 nm – 116.7 nm):**  
+  Phase changes smoothly from 0° to 360°. Transmission stays high (>90%). This is the working region.
 
-This project uses publicly available spectroscopic ellipsometry data from the following source:
+- **At 100 nm radius:**  
+  Transmission drops very low (3.4%). Reflection becomes very high. This is a resonance effect, so it is not usable.
 
-**Raw data from spectroscopic ellipsometer**
-
-- Author: Chandan Howlader  
-- Year: 2020  
-- Version: 1  
-- Repository: Mendeley Data  
-- DOI: https://doi.org/10.17632/zkbpdfhbh6.1  
-- License: CC BY 4.0  
-
-### Citation (APA format)
-
-Howlader, C. (2020). *Raw data from spectroscopic ellipsometer* (Version 1) [Data set]. Mendeley Data. https://doi.org/10.17632/zkbpdfhbh6.1
+- **Large radius (>133 nm):**  
+  Pillars are too close. The structure stops acting like separate waveguides, so performance drops.
 
 ---
 
-### Description
+### 2. Data Table
 
-This dataset contains:
-
-- Ψ (Psi) and Δ (Delta) spectra measured using spectroscopic ellipsometry  
-- Optical constants derived using B-spline and Psemi-Tri oscillator models  
-- Absorption and transmission spectra from UV–Vis spectroscopy  
-- Modeled transmission spectra for different film thicknesses  
-
-The data is used here for extracting optical constants (n, k), dielectric functions, and thickness-dependent optical analysis of thin films.
+| Radius (nm) | Transmission | Reflection | Phase (deg) | Note |
+| --- | --- | --- | --- | --- |
+| 50.0  | 0.987 | 0.012 | 0°    | Good start |
+| 75.0  | 0.974 | 0.026 | 122°  | Good |
+| 100.0 | 0.034 | 0.935 | 217°  | Bad (resonance) |
+| 116.7 | 0.962 | 0.037 | 359°  | Best case |
+| 150.0 | 0.129 | 0.870 | 471°  | Too dense |
 
 ---
 
-### License Note
+## How to Run
 
-This dataset is distributed under **Creative Commons Attribution 4.0 (CC BY 4.0)**, allowing reuse with proper attribution.
+1. Clone this repo
+2. Open Ansys Lumerical FDTD
+3. Run `metalens_simu_expanded.lsf`
+4. The script will:
+   - Build the structure
+   - Run the sweep
+   - Save results to a file
+   - Show plots
